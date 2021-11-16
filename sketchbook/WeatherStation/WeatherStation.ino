@@ -19,7 +19,10 @@
   
 #include "thingProperties.h"
 #include <Arduino_MKRIoTCarrier.h>
+#include <RTCZero.h>
+
 MKRIoTCarrier carrier;
+RTCZero alarm;
 
 enum modes{TEMPERATURE, HUMIDITY, LIGHT, PRESSURE, DISPLAY_OFF};
 int refreshCount = 0;
@@ -27,7 +30,7 @@ int refreshCount = 0;
 void setup() {
   // Initialize serial and wait for port to open:
   Serial.begin(9600);
-  //while (!Serial);
+  delay(1000);
  
   // Defined in thingProperties.h
   initProperties();
@@ -44,45 +47,45 @@ void setup() {
     delay(500);
   }
   delay(500);
+
+  // Init carrier
   CARRIER_CASE = true;
   carrier.begin();
   carrier.display.setRotation(0);
-  carrier.display.fillScreen(ST77XX_BLACK);
-  carrier.display.setTextColor(ST77XX_WHITE);
-  carrier.display.setTextSize(3);
 
-  carrier.display.setCursor(60, 80);
-  carrier.display.print("Weather");
-  carrier.display.setCursor(60, 120);
-  carrier.display.print("Station");
-  delay(1000);
+  // Print when successfully connected
   carrier.display.fillScreen(ST77XX_BLACK);
   carrier.display.setTextColor(ST77XX_WHITE);
   carrier.display.setTextSize(2);
-
   carrier.display.setCursor(70, 80);
   carrier.display.print("Connected");
   carrier.display.setCursor(50, 110);
   carrier.display.print("To IoT Cloud");
+  delay(1000);
+  
+  carrier.display.setCursor(60, 80);
+  carrier.display.print("Weather");
+  carrier.display.setCursor(60, 120);
+  carrier.display.print("Station");
   delay(1000);
 }
  
 void loop() {
   ArduinoCloud.update();
   carrier.Buttons.update();
- 
+
+  // Readings
   while(!carrier.Light.colorAvailable()) {
     delay(5);
   }
-  int none;
-  carrier.Light.readColor(none, none, none, light);
-  
-  static modes modeSelect = TEMPERATURE;
-  static modes previousMode = TEMPERATURE;
-  
+  int _;
+  carrier.Light.readColor(_, _, _, light);
   temperature = carrier.Env.readTemperature();
   humidity = carrier.Env.readHumidity();
   pressure = carrier.Pressure.readPressure();
+  
+  static modes modeSelect = TEMPERATURE;
+  static modes previousMode = TEMPERATURE;
   
   if(carrier.Button0.onTouchDown()) {
     modeSelect = TEMPERATURE;
